@@ -1,0 +1,69 @@
+server:
+  port: 8081
+  shutdown: graceful
+
+spring:
+  application:
+    name: sentinel-hub
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sentinelhub
+    username: sentinel
+    password: ${DB_PASSWORD:sentinel}
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  security:
+    user:
+      name: ${SECURITY_ADMIN_USER:admin}
+      password: ${SECURITY_ADMIN_PASSWORD:admin123}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+sentinelhub:
+  elasticsearch:
+    enabled: true
+    hosts: localhost:9200
+    username: elastic
+    password: ${ELASTIC_PASSWORD:changeme}
+  kafka:
+    bootstrap-servers: localhost:9092
+    security-events-topic: security-events
+    alert-topic: security-alerts
+  siem:
+    enabled: true
+    integration-type: ${SIEM_TYPE:splunk}
+    splunk:
+      hec-url: ${SPLUNK_HEC_URL:}
+      hec-token: ${SPLUNK_HEC_TOKEN:}
+  edr:
+    enabled: true
+    integration-type: ${EDR_TYPE:crowdstrike}
+    crowdstrike:
+      client-id: ${CROWDSTRIKE_CLIENT_ID:}
+      client-secret: ${CROWDSTRIKE_CLIENT_SECRET:}
+      base-url: ${CROWDSTRIKE_BASE_URL:}
+  detection:
+    rules-refresh-interval-seconds: 60
+    alert-threshold: 0.7
+  incident:
+    auto-escalation-enabled: true
+    escalation-timeout-minutes: 30
+
+logging:
+  level:
+    com.sentinelhub: INFO
+    org.elasticsearch: WARN
+    org.springframework.security: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
